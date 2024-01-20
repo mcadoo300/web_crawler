@@ -39,7 +39,7 @@ function getURLFromHTML(htmlBody, baseURL) {
   }
   return linked_URLS;
 }
-
+/*
 const html_text = '<html>' +
     '<body>' + 
         '<a href="/boot.dev/"><span>Go to Boot.dev</span></a>' +
@@ -47,7 +47,12 @@ const html_text = '<html>' +
 '</html>';
 
 getURLFromHTML(html_text, new URL("https://testme.com"));
-
+*/
+const inputHTLM = '<a href="https://blog.boot.dev"> boot.dev blog </a>';
+const inputURL = new URL("https://test.com");
+getURLFromHTML(inputHTLM);
+console.log(getURLFromHTML(inputURL));
 module.exports = {
-  normalizeURL
-}
+  normalizeURL,
+  getURLFromHTML
+};
