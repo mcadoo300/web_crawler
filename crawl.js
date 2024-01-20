@@ -1,4 +1,5 @@
-const { JSDOM } = require('jsdom')
+const { JSDOM } = require('jsdom');
+const { env } = require('node:process');
 
 function getURLsFromHTML(htmlBody, baseURL){
   const urls = []
@@ -31,7 +32,55 @@ function normalizeURL(url){
   return fullPath
 }
 
+async function crawlPage(startURL, currentURL, pages){
+  const currentURLObj = new URL(currentURL);
+  const startURLObj = new URL(startURL);
+
+  if (startURLObj.hostname !== currentURLObj.hostname){
+    return pages;
+  }
+  
+  const normalizedCurrentURL = normalizeURL(currentURL);
+  if (pages[normalizedCurrentURL] > 0){
+    pages[normalizedCurrentURL]++;
+    return pages;
+  }
+  
+  if (currentURL === startURL){
+    pages[normalizedCurrentURL] = 0;
+  }else{
+    pages[normalizedCurrentURL] = 1;
+  }
+
+  console.log(`crawling ${currentURL}`);
+  let htmlBody = '';
+  try {
+      const response = await fetch(currentURL);
+    if (response.status >= 400){
+      console.log('Error with status')
+      exit();
+    } else if (response.type === 'text/html'){
+      console.log('Error with type')
+      exit();
+    } else{
+      htmlBody = await response.text();
+    }
+  } catch (error) {
+   console.log(`Error in trying to crawl URL:\n ${error.message}`) 
+  }
+  
+  const nextURLs = getURLsFromHTML(htmlBody, startURL);
+  for (const nextURL of nextURLs){
+    pages = await crawlPage(startURL, nextURL, pages);
+  }
+  return pages;
+}
+
+
+
+
 module.exports = {
   normalizeURL,
-  getURLsFromHTML
+  getURLsFromHTML,
+  crawlPage
 }
