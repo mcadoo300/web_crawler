@@ -1,58 +1,37 @@
-const jsdom = require("jsdom");
-const { JSDOM } = jsdom;
+const { JSDOM } = require('jsdom')
 
-
-function normalizeURL(URL) {
-  try {
-    const host = URL.host
-    const port = URL.port
-    const path = URL.pathname
-    const url_comp = [host,port,path]
-    return url_comp.join('')
-
-  } catch (error) {
-    console.log(`error with normalizing url: ${error.message}`) 
-  }
-}
-
-function getURLFromHTML(htmlBody, baseURL) {
-  const linked_URLS = [];
-  const dom = new JSDOM(htmlBody);
-  const hyper_links = dom.window.document.querySelectorAll('a');
-  for (const linkElement of hyper_links){
-    if (linkElement.href.slice(0,1) === '/'){
-      //relative
+function getURLsFromHTML(htmlBody, baseURL){
+  const urls = []
+  const dom = new JSDOM(htmlBody)
+  const aElements = dom.window.document.querySelectorAll('a')
+  for (const aElement of aElements){
+    if (aElement.href.slice(0,1) === '/'){
       try {
-        const newURL = new URL(`${baseURL.origin}${linkElement.href}`);
-        linked_URLS.push(newURL);
-      } catch (error) {
-        console.log(`error with relative url: ${error.message}`);
+        urls.push(new URL(aElement.href, baseURL).href)
+      } catch (err){
+        console.log(`${err.message}: ${aElement.href}`)
       }
     } else {
       try {
-        const newURL = new URL(linkElement.href);
-        linked_URLS.push(newURL);
-      } catch (error) {
-       console.log(`error with absolute url: ${error.message}`); 
+        urls.push(new URL(aElement.href).href)
+      } catch (err){
+        console.log(`${err.message}: ${aElement.href}`)
       }
     }
   }
-  return linked_URLS;
+  return urls
 }
-/*
-const html_text = '<html>' +
-    '<body>' + 
-        '<a href="/boot.dev/"><span>Go to Boot.dev</span></a>' +
-    '</body>' +
-'</html>';
 
-getURLFromHTML(html_text, new URL("https://testme.com"));
-*/
-const inputHTLM = '<a href="https://blog.boot.dev"> boot.dev blog </a>';
-const inputURL = new URL("https://test.com");
-getURLFromHTML(inputHTLM);
-console.log(getURLFromHTML(inputURL));
+function normalizeURL(url){
+  const urlObj = new URL(url)
+  let fullPath = `${urlObj.host}${urlObj.pathname}`
+  if (fullPath.length > 0 && fullPath.slice(-1) === '/'){
+    fullPath = fullPath.slice(0, -1)
+  }
+  return fullPath
+}
+
 module.exports = {
   normalizeURL,
-  getURLFromHTML
-};
+  getURLsFromHTML
+}
