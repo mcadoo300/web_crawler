@@ -1,6 +1,8 @@
 const { JSDOM } = require('jsdom');
 const { env } = require('node:process');
 
+const MAX_PAGES = 20;
+
 function getURLsFromHTML(htmlBody, baseURL){
   const urls = []
   const dom = new JSDOM(htmlBody)
@@ -33,6 +35,9 @@ function normalizeURL(url){
 }
 
 async function crawlPage(startURL, currentURL, pages){
+  if (Object.keys(pages).length > MAX_PAGES-1) {
+    return pages;
+  }
   const currentURLObj = new URL(currentURL);
   const startURLObj = new URL(startURL);
 
@@ -72,6 +77,9 @@ async function crawlPage(startURL, currentURL, pages){
   const nextURLs = getURLsFromHTML(htmlBody, startURL);
   for (const nextURL of nextURLs){
     pages = await crawlPage(startURL, nextURL, pages);
+    if (Object.keys(pages).length > MAX_PAGES-1){
+      break;
+    }
   }
   return pages;
 }
